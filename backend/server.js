@@ -8,9 +8,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// app.get("/", (req, res) => {
+//   res.send("AI Code Debugger API Running");
+// });
 app.get("/", (req, res) => {
-  res.send("AI Code Debugger API Running");
+  res.send("AI Code Debugger API Running 🚀");
 });
+
 
 app.post("/debug", async (req, res) => {
 
