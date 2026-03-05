@@ -1,0 +1,275 @@
+import { useState } from "react";
+import Editor from "@monaco-editor/react";
+
+function App() {
+
+  const [code, setCode] = useState("");
+  const [language, setLanguage] = useState("javascript");
+  const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const analyzeCode = async () => {
+
+    if (!code) {
+      alert("Please paste some code");
+      return;
+    }
+
+    setLoading(true);
+    setResult("");
+
+    try {
+
+      const response = await fetch("https://ai-code-debugger-kojw.onrender.com/debug", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          code,
+          language
+        })
+      });
+
+      const data = await response.json();
+
+      setResult(data.result);
+
+    } catch (error) {
+
+      setResult("Error connecting to AI service.");
+
+    }
+
+    setLoading(false);
+  };
+
+  const copyResult = () => {
+    navigator.clipboard.writeText(result);
+    alert("Copied to clipboard");
+  };
+
+  return (
+
+    <div style={styles.page}>
+
+      {/* HEADER */}
+
+      <header style={styles.header}>
+
+        <div style={styles.logo}>
+          AI Code Debugger
+        </div>
+
+        <div style={styles.owner}>
+          Built by <b>Shubham Prajapati</b>
+        </div>
+
+        <div style={styles.links}>
+          <a href="https://github.com/Shubh-kumar90" target="_blank">GitHub</a>
+          <a href="https://www.linkedin.com/in/shubham-prajapati-24133a324/" target="_blank">LinkedIn</a>
+        </div>
+
+      </header>
+
+
+      {/* MAIN */}
+
+      <main style={styles.container}>
+
+        <h1 style={styles.title}>
+          AI Code Debugger
+        </h1>
+
+        <p style={styles.subtitle}>
+          Paste your code and let AI detect bugs and suggest fixes.
+        </p>
+
+        <div style={styles.controls}>
+
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            style={styles.select}
+          >
+
+            <option value="javascript">JavaScript</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+            <option value="cpp">C++</option>
+
+          </select>
+
+          <button
+            onClick={analyzeCode}
+            style={styles.button}
+            disabled={loading}
+          >
+
+            {loading ? "Analyzing..." : "Analyze Code"}
+
+          </button>
+
+        </div>
+
+
+        {/* CODE EDITOR */}
+
+        <div style={styles.editorContainer}>
+
+          <Editor
+            height="320px"
+            language={language}
+            theme="vs-dark"
+            value={code}
+            onChange={(value) => setCode(value)}
+          />
+
+        </div>
+
+
+        {/* RESULT */}
+
+        <div style={styles.resultContainer}>
+
+          <div style={styles.resultHeader}>
+
+            <h3>AI Debug Result</h3>
+
+            {result && (
+              <button onClick={copyResult} style={styles.copyButton}>
+                Copy
+              </button>
+            )}
+
+          </div>
+
+          <pre style={styles.result}>
+            {result || "AI response will appear here..."}
+          </pre>
+
+        </div>
+
+      </main>
+
+
+      {/* FOOTER */}
+
+      <footer style={styles.footer}>
+
+        © 2026 Shubham Prajapati • AI Code Debugger Project
+
+      </footer>
+
+    </div>
+  );
+}
+
+const styles = {
+
+  page: {
+    fontFamily: "Arial",
+    background: "#f4f6f9",
+    minHeight: "100vh",
+    display: "flex",
+    flexDirection: "column"
+  },
+
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "15px 30px",
+    background: "#111",
+    color: "white"
+  },
+
+  logo: {
+    fontSize: "18px",
+    fontWeight: "bold"
+  },
+
+  owner: {
+    fontSize: "14px"
+  },
+
+  links: {
+    display: "flex",
+    gap: "15px"
+  },
+
+  container: {
+    maxWidth: "900px",
+    margin: "auto",
+    padding: "40px"
+  },
+
+  title: {
+    textAlign: "center"
+  },
+
+  subtitle: {
+    textAlign: "center",
+    color: "#555",
+    marginBottom: "25px"
+  },
+
+  controls: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: "10px"
+  },
+
+  select: {
+    padding: "8px"
+  },
+
+  button: {
+    padding: "10px 20px",
+    background: "#007bff",
+    color: "white",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer"
+  },
+
+  editorContainer: {
+    border: "1px solid #ddd",
+    borderRadius: "6px",
+    overflow: "hidden"
+  },
+
+  resultContainer: {
+    marginTop: "20px"
+  },
+
+  resultHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center"
+  },
+
+  copyButton: {
+    padding: "5px 10px",
+    cursor: "pointer"
+  },
+
+  result: {
+    background: "#f5f5f5",
+    padding: "15px",
+    borderRadius: "5px",
+    whiteSpace: "pre-wrap"
+  },
+
+  footer: {
+    textAlign: "center",
+    padding: "15px",
+    marginTop: "auto",
+    background: "#111",
+    color: "white",
+    fontSize: "13px"
+  }
+
+};
+
+export default App;
