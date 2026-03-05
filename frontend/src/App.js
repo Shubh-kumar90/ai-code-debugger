@@ -65,10 +65,10 @@ function App() {
           Built by <b>Shubham Prajapati</b>
         </div>
 
-        <div style={styles.links}>
-          <a href="https://github.com/Shubh-kumar90" target="_blank">GitHub</a>
-          <a href="https://www.linkedin.com/in/shubham-prajapati-24133a324/" target="_blank">LinkedIn</a>
-        </div>
+        {/* <div style={styles.links}>
+         <a href="https://github.com/yourprofile" target="_blank" rel="noopener noreferrer">
+<a href="https://linkedin.com/in/yourprofile" target="_blank" rel="noopener noreferrer"></a>
+        </div> */}
 
       </header>
 
