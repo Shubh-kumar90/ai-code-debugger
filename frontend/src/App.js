@@ -1,12 +1,18 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Editor from "@monaco-editor/react";
 
 function App() {
 
-  const [code, setCode] = useState("");
+  const editorRef = useRef(null);
+
+  const [code, setCode] = useState("// Write or paste your code here");
   const [language, setLanguage] = useState("javascript");
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const handleEditorMount = (editor) => {
+    editorRef.current = editor;
+  };
 
   const analyzeCode = async () => {
 
@@ -33,7 +39,7 @@ function App() {
 
       const data = await response.json();
 
-      setResult(data.result);
+      setResult(data.result || "No AI response returned.");
 
     } catch (error) {
 
@@ -65,13 +71,7 @@ function App() {
           Built by <b>Shubham Prajapati</b>
         </div>
 
-        {/* <div style={styles.links}>
-         <a href="https://github.com/yourprofile" target="_blank" rel="noopener noreferrer">
-<a href="https://linkedin.com/in/yourprofile" target="_blank" rel="noopener noreferrer"></a>
-        </div> */}
-
       </header>
-
 
       {/* MAIN */}
 
@@ -112,21 +112,27 @@ function App() {
 
         </div>
 
-
-        {/* CODE EDITOR */}
+        {/* MONACO EDITOR */}
 
         <div style={styles.editorContainer}>
 
           <Editor
-            height="320px"
+            height="420px"
             language={language}
             theme="vs-dark"
             value={code}
             onChange={(value) => setCode(value)}
+            onMount={handleEditorMount}
+            options={{
+              fontSize: 14,
+              minimap: { enabled: false },
+              automaticLayout: true,
+              scrollBeyondLastLine: false,
+              wordWrap: "on"
+            }}
           />
 
         </div>
-
 
         {/* RESULT */}
 
@@ -152,13 +158,10 @@ function App() {
 
       </main>
 
-
       {/* FOOTER */}
 
       <footer style={styles.footer}>
-
         © 2026 Shubham Prajapati • AI Code Debugger Project
-
       </footer>
 
     </div>
@@ -193,13 +196,8 @@ const styles = {
     fontSize: "14px"
   },
 
-  links: {
-    display: "flex",
-    gap: "15px"
-  },
-
   container: {
-    maxWidth: "900px",
+    maxWidth: "950px",
     margin: "auto",
     padding: "40px"
   },
@@ -258,7 +256,8 @@ const styles = {
     background: "#f5f5f5",
     padding: "15px",
     borderRadius: "5px",
-    whiteSpace: "pre-wrap"
+    whiteSpace: "pre-wrap",
+    fontFamily: "monospace"
   },
 
   footer: {
