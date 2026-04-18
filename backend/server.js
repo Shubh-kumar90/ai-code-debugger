@@ -16,7 +16,7 @@ app.get("/", (req, res) => {
 
 app.post("/debug", async (req, res) => {
 
-  const { code, language } = req.body;
+  const { code, language, mode } = req.body;
 
   if (!code || !language) {
     return res.status(400).json({
@@ -24,23 +24,52 @@ app.post("/debug", async (req, res) => {
     });
   }
 
-  try {
+  let prompt = "";
 
-    const prompt = `
+  if (mode === "explain") {
+    prompt = `
+Explain this ${language} code step by step in simple terms.
+
+Use clear headings and bullet points.
+
+Code:
+${code}
+`;
+  } 
+  else if (mode === "optimize") {
+    prompt = `
+Optimize this ${language} code for:
+- performance
+- readability
+- best practices
+
+Provide improved code + explanation.
+
+Code:
+${code}
+`;
+  } 
+  else {
+    prompt = `
 You are an expert ${language} debugger.
 
 🔴 Bugs:
-- List issues
+- Identify all issues
 
 🟡 Explanation:
 - Explain clearly
 
 🟢 Fixed Code:
-- Provide corrected code
+- Provide corrected version
+
+Use proper formatting and sections.
 
 Code:
 ${code}
 `;
+  }
+
+  try {
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -60,11 +89,13 @@ ${code}
       return res.status(500).json({ error: "Invalid AI response" });
     }
 
-    res.json({ result: data.choices[0].message.content });
+    res.json({
+      result: data.choices[0].message.content
+    });
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "AI debugging failed" });
+    res.status(500).json({ error: "AI request failed" });
   }
 
 });
