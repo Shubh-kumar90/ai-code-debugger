@@ -1,5 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Editor from "@monaco-editor/react";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 function App() {
 
@@ -9,6 +11,13 @@ function App() {
   const [language, setLanguage] = useState("javascript");
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
+  const [history, setHistory] = useState([]);
+
+  // Load history
+  useEffect(() => {
+    const saved = localStorage.getItem("debugHistory");
+    if (saved) setHistory(JSON.parse(saved));
+  }, []);
 
   const handleEditorMount = (editor) => {
     editorRef.current = editor;
@@ -31,15 +40,22 @@ function App() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          code,
-          language
-        })
+        body: JSON.stringify({ code, language })
       });
 
       const data = await response.json();
 
-      setResult(data.result || "No AI response returned.");
+      const resText = data.result || "No AI response returned.";
+      setResult(resText);
+
+      // Save history
+      const newHistory = [
+        { code, language, result: resText },
+        ...history
+      ];
+
+      setHistory(newHistory);
+      localStorage.setItem("debugHistory", JSON.stringify(newHistory));
 
     } catch (error) {
       setResult("Error connecting to AI service.");
@@ -53,27 +69,34 @@ function App() {
     setResult(prev => prev + "\n\n✅ Copied!");
   };
 
+  const downloadResult = () => {
+    const blob = new Blob([result], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "debug-result.txt";
+    link.click();
+  };
+
+  const clearAll = () => {
+    setCode("");
+    setResult("");
+  };
+
   return (
 
     <div style={styles.page}>
 
-      {/* HEADER */}
       <header style={styles.header}>
-        <div style={styles.logo}>AI Code Debugger</div>
-        <div style={styles.owner}>Built by <b>Shubham Prajapati</b></div>
+        <div>AI Code Debugger</div>
+        <div>Built by <b>Shubham Prajapati</b></div>
       </header>
 
-      {/* MAIN */}
       <div style={styles.mainLayout}>
 
         {/* CONTROLS */}
         <div style={styles.controls}>
 
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            style={styles.select}
-          >
+          <select value={language} onChange={(e) => setLanguage(e.target.value)}>
             <option value="javascript">JavaScript</option>
             <option value="typescript">TypeScript</option>
             <option value="python">Python</option>
@@ -86,20 +109,20 @@ function App() {
             <option value="ruby">Ruby</option>
           </select>
 
-          <button
-            onClick={analyzeCode}
-            style={styles.button}
-            disabled={loading}
-          >
-            {loading ? "🔄 Analyzing..." : "🚀 Analyze Code"}
-          </button>
+          <div>
+            <button onClick={analyzeCode} disabled={loading}>
+              {loading ? "🔄 Analyzing..." : "🚀 Analyze"}
+            </button>
+
+            <button onClick={clearAll}>Clear</button>
+          </div>
 
         </div>
 
-        {/* SPLIT LAYOUT */}
+        {/* SPLIT UI */}
         <div style={styles.splitContainer}>
 
-          {/* LEFT - EDITOR */}
+          {/* EDITOR */}
           <div style={styles.leftPane}>
             <Editor
               height="100%"
@@ -117,32 +140,58 @@ function App() {
             />
           </div>
 
-          {/* RIGHT - RESULT */}
+          {/* RESULT */}
           <div style={styles.rightPane}>
 
             <div style={styles.resultHeader}>
-              <h3>AI Debug Result</h3>
+              <h3>Result</h3>
 
-              {result && (
-                <button onClick={copyResult} style={styles.copyButton}>
-                  Copy
-                </button>
-              )}
+              <div>
+                {result && (
+                  <>
+                    <button onClick={copyResult}>Copy</button>
+                    <button onClick={downloadResult}>Download</button>
+                  </>
+                )}
+              </div>
             </div>
 
-            <pre style={styles.resultBox}>
+            <SyntaxHighlighter
+              language={language}
+              style={vscDarkPlus}
+              customStyle={{ borderRadius: "8px" }}
+            >
               {result || "AI response will appear here..."}
-            </pre>
+            </SyntaxHighlighter>
 
           </div>
 
         </div>
 
+        {/* HISTORY */}
+        <div style={styles.historyBox}>
+          <h3>History</h3>
+
+          {history.map((item, index) => (
+            <div
+              key={index}
+              style={styles.historyItem}
+              onClick={() => {
+                setCode(item.code);
+                setResult(item.result);
+                setLanguage(item.language);
+              }}
+            >
+              {item.language.toUpperCase()}
+            </div>
+          ))}
+
+        </div>
+
       </div>
 
-      {/* FOOTER */}
       <footer style={styles.footer}>
-        © 2026 Shubham Prajapati • AI Code Debugger Project
+        © 2026 Shubham Prajapati
       </footer>
 
     </div>
@@ -150,114 +199,17 @@ function App() {
 }
 
 const styles = {
-
-  page: {
-    fontFamily: "Arial",
-    background: "#f4f6f9",
-    height: "100vh",
-    display: "flex",
-    flexDirection: "column"
-  },
-
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "15px 30px",
-    background: "#111",
-    color: "white"
-  },
-
-  logo: {
-    fontSize: "18px",
-    fontWeight: "bold"
-  },
-
-  owner: {
-    fontSize: "14px"
-  },
-
-  mainLayout: {
-    flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    padding: "15px"
-  },
-
-  controls: {
-    display: "flex",
-    justifyContent: "space-between",
-    marginBottom: "10px",
-    position: "sticky",
-    top: 0,
-    background: "#f4f6f9",
-    zIndex: 10,
-    padding: "10px 0"
-  },
-
-  select: {
-    padding: "8px"
-  },
-
-  button: {
-    padding: "10px 20px",
-    background: "#007bff",
-    color: "white",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer"
-  },
-
-  splitContainer: {
-    display: "flex",
-    gap: "10px",
-    flex: 1
-  },
-
-  leftPane: {
-    flex: 1.2,
-    borderRadius: "8px",
-    overflow: "hidden",
-    border: "1px solid #ddd"
-  },
-
-  rightPane: {
-    flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    background: "#0d1117",
-    borderRadius: "8px",
-    padding: "10px",
-    color: "#c9d1d9"
-  },
-
-  resultHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center"
-  },
-
-  copyButton: {
-    padding: "5px 10px",
-    cursor: "pointer"
-  },
-
-  resultBox: {
-    flex: 1,
-    overflowY: "auto",
-    whiteSpace: "pre-wrap",
-    fontFamily: "monospace",
-    marginTop: "10px"
-  },
-
-  footer: {
-    textAlign: "center",
-    padding: "10px",
-    background: "#111",
-    color: "white",
-    fontSize: "13px"
-  }
-
+  page: { height: "100vh", display: "flex", flexDirection: "column" },
+  header: { padding: "10px", background: "#111", color: "white", display: "flex", justifyContent: "space-between" },
+  mainLayout: { flex: 1, padding: "10px", display: "flex", flexDirection: "column" },
+  controls: { display: "flex", justifyContent: "space-between", marginBottom: "10px" },
+  splitContainer: { display: "flex", flex: 1, gap: "10px" },
+  leftPane: { flex: 1.2, border: "1px solid #ddd" },
+  rightPane: { flex: 1, background: "#0d1117", padding: "10px", color: "white" },
+  resultHeader: { display: "flex", justifyContent: "space-between" },
+  historyBox: { marginTop: "10px", background: "#111", color: "white", padding: "10px" },
+  historyItem: { cursor: "pointer", padding: "5px", borderBottom: "1px solid #333" },
+  footer: { textAlign: "center", background: "#111", color: "white", padding: "5px" }
 };
 
 export default App;

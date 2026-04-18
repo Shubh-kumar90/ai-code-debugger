@@ -18,7 +18,6 @@ app.post("/debug", async (req, res) => {
 
   const { code, language } = req.body;
 
-  // ✅ Validation
   if (!code || !language) {
     return res.status(400).json({
       error: "Code and language are required"
@@ -30,16 +29,14 @@ app.post("/debug", async (req, res) => {
     const prompt = `
 You are an expert ${language} debugger.
 
-Analyze the code deeply and respond in this format:
-
 🔴 Bugs:
-- List all bugs clearly
+- List issues
 
 🟡 Explanation:
-- Explain each issue in simple terms
+- Explain clearly
 
 🟢 Fixed Code:
-- Provide clean corrected code
+- Provide corrected code
 
 Code:
 ${code}
@@ -63,9 +60,7 @@ ${code}
       return res.status(500).json({ error: "Invalid AI response" });
     }
 
-    const result = data.choices[0].message.content;
-
-    res.json({ result });
+    res.json({ result: data.choices[0].message.content });
 
   } catch (error) {
     console.error(error);
