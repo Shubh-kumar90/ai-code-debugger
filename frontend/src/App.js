@@ -5,7 +5,7 @@ import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 function App() {
 
-  const editorRef = useRef(null);
+  // const editorRef = useRef(null);
   const resultRef = useRef(null);
 
   const [code, setCode] = useState("// Write or paste your code here");
