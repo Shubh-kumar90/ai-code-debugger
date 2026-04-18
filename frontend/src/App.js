@@ -28,7 +28,7 @@ function App() {
   const analyzeCode = async () => {
 
     if (!code) {
-      alert("Paste some code first");
+      alert("Paste some code first!");
       return;
     }
 
