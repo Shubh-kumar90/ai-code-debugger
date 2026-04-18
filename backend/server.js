@@ -1,35 +1,45 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import fetch from "node-fetch";
 
 dotenv.config();
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-// app.get("/", (req, res) => {
-//   res.send("AI Code Debugger API Running");
-// });
 app.get("/", (req, res) => {
   res.send("AI Code Debugger API Running 🚀");
 });
-
 
 app.post("/debug", async (req, res) => {
 
   const { code, language } = req.body;
 
+  // ✅ Validation
+  if (!code || !language) {
+    return res.status(400).json({
+      error: "Code and language are required"
+    });
+  }
+
   try {
 
     const prompt = `
-You are a senior software engineer.
+You are an expert ${language} debugger.
 
-Analyze this ${language} code.
+Analyze the code deeply and respond in this format:
 
-1. Find bugs
-2. Explain the issue
-3. Provide corrected code
+🔴 Bugs:
+- List all bugs clearly
+
+🟡 Explanation:
+- Explain each issue in simple terms
+
+🟢 Fixed Code:
+- Provide clean corrected code
 
 Code:
 ${code}
@@ -43,32 +53,27 @@ ${code}
       },
       body: JSON.stringify({
         model: "deepseek/deepseek-chat",
-        messages: [
-          { role: "user", content: prompt }
-        ]
+        messages: [{ role: "user", content: prompt }]
       })
     });
 
     const data = await response.json();
 
-    const result =
-      data?.choices?.[0]?.message?.content ||
-      "No AI response returned.";
+    if (!data || !data.choices) {
+      return res.status(500).json({ error: "Invalid AI response" });
+    }
+
+    const result = data.choices[0].message.content;
 
     res.json({ result });
 
   } catch (error) {
-
     console.error(error);
-
-    res.status(500).json({
-      error: "AI debugging failed"
-    });
-
+    res.status(500).json({ error: "AI debugging failed" });
   }
 
 });
 
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+app.listen(process.env.PORT || 5000, () => {
+  console.log("Server running 🚀");
 });

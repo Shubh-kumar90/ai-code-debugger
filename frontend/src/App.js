@@ -52,7 +52,7 @@ function App() {
 
   const copyResult = () => {
     navigator.clipboard.writeText(result);
-    alert("Copied to clipboard");
+   setResult(prev => prev + "\n\n✅ Copied!");
   };
 
   return (
@@ -92,12 +92,16 @@ function App() {
             onChange={(e) => setLanguage(e.target.value)}
             style={styles.select}
           >
-
-            <option value="javascript">JavaScript</option>
-            <option value="python">Python</option>
-            <option value="java">Java</option>
-            <option value="cpp">C++</option>
-
+<option value="javascript">JavaScript</option>
+<option value="typescript">TypeScript</option>
+<option value="python">Python</option>
+<option value="java">Java</option>
+<option value="cpp">C++</option>
+<option value="c">C</option>
+<option value="go">Go</option>
+<option value="rust">Rust</option>
+<option value="php">PHP</option>
+<option value="ruby">Ruby</option>
           </select>
 
           <button
@@ -106,7 +110,7 @@ function App() {
             disabled={loading}
           >
 
-            {loading ? "Analyzing..." : "Analyze Code"}
+            {loading ? "🔄 Analyzing..." : "🚀 Analyze Code"}
 
           </button>
 
@@ -150,7 +154,7 @@ function App() {
 
           </div>
 
-          <pre style={styles.result}>
+          <pre style={{ ...styles.result, background: "#0d1117", color: "#c9d1d9" }}>
             {result || "AI response will appear here..."}
           </pre>
 
