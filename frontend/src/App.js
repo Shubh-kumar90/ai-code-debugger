@@ -1,13 +1,9 @@
-
 import { useState, useEffect, useRef } from "react";
 import Editor from "@monaco-editor/react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 function App() {
 
- 
-  const resultRef = useRef(null);
+  const resultBoxRef = useRef(null);
 
   const [code, setCode] = useState("// Write or paste your code here");
   const [language, setLanguage] = useState("javascript");
@@ -21,19 +17,22 @@ function App() {
     if (saved) setHistory(JSON.parse(saved));
   }, []);
 
+  // ⚡ FAST SCROLL (no smooth lag)
   useEffect(() => {
-    resultRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (resultBoxRef.current) {
+      resultBoxRef.current.scrollTop = 0;
+    }
   }, [result]);
 
   const analyzeCode = async () => {
 
-    if (!code) {
+    if (!code.trim()) {
       alert("Paste some code first!");
       return;
     }
 
     setLoading(true);
-    setResult("");
+    setResult("⏳ Thinking...");
 
     try {
 
@@ -44,11 +43,6 @@ function App() {
         },
         body: JSON.stringify({ code, language, mode })
       });
-
-      if (!response.ok) {
-        setResult("⚠️ Server error. Try again.");
-        return;
-      }
 
       const data = await response.json();
       const resText = data.result || "No response";
@@ -81,19 +75,18 @@ function App() {
     setHistory([]);
   };
 
-
-
   const copyResult = () => {
-  navigator.clipboard.writeText(result);
-};
+    navigator.clipboard.writeText(result);
+  };
 
-const downloadResult = () => {
-  const blob = new Blob([result], { type: "text/plain" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "ai-result.txt";
-  link.click();
-};
+  const downloadResult = () => {
+    const blob = new Blob([result], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "ai-result.txt";
+    link.click();
+  };
+
   return (
     <div style={styles.page}>
 
@@ -106,7 +99,6 @@ const downloadResult = () => {
 
         {/* CONTROLS */}
         <div style={styles.controls}>
-
           <select value={language} onChange={(e) => setLanguage(e.target.value)}>
             <option value="javascript">JS</option>
             <option value="python">Python</option>
@@ -123,39 +115,44 @@ const downloadResult = () => {
           <button onClick={analyzeCode}>
             {loading ? "⏳ Thinking..." : "🚀 Run"}
           </button>
-
         </div>
 
         {/* EDITOR + RESULT */}
         <div style={styles.splitContainer}>
 
-          <Editor
-            height="100%"
-            language={language}
-            theme="vs-dark"
-            value={code}
-            onChange={(v) => setCode(v)}
-          />
-
-          <div style={styles.resultBox}>
-            <SyntaxHighlighter language={language} style={vscDarkPlus}>
-              {result || "Result will appear here..."}
-            </SyntaxHighlighter>
-            <div ref={resultRef}></div>
+          {/* EDITOR */}
+          <div style={styles.editor}>
+            <Editor
+              height="100%"
+              language={language}
+              theme="vs-dark"
+              value={code}
+              onChange={(v) => setCode(v)}
+            />
           </div>
 
+          {/* RESULT */}
+          <div style={styles.resultContainer}>
 
+            <div style={styles.resultHeader}>
+              <h3>Result</h3>
 
-<div style={styles.resultHeader}>
-  <h3>Result</h3>
+              {result && (
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button onClick={copyResult}>Copy</button>
+                  <button onClick={downloadResult}>Download</button>
+                </div>
+              )}
+            </div>
 
-  {result && (
-    <div>
-      <button onClick={copyResult}>Copy</button>
-      <button onClick={downloadResult}>Download</button>
-    </div>
-  )}
-</div>
+            <div ref={resultBoxRef} style={styles.resultBox}>
+              <pre style={styles.output}>
+                {result || "Result will appear here..."}
+              </pre>
+            </div>
+
+          </div>
+
         </div>
 
         {/* HISTORY */}
@@ -186,7 +183,6 @@ const downloadResult = () => {
         </div>
 
       </div>
-
     </div>
   );
 }
@@ -194,12 +190,68 @@ const downloadResult = () => {
 const styles = {
   page: { height: "100vh", display: "flex", flexDirection: "column" },
   header: { padding: "10px", background: "#111", color: "white" },
-  mainLayout: { flex: 1, padding: "10px", display: "flex", flexDirection: "column", gap: "10px" },
+
+  mainLayout: {
+    flex: 1,
+    padding: "10px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px"
+  },
+
   controls: { display: "flex", gap: "10px" },
-  splitContainer: { display: "flex", flex: 1, gap: "10px" },
-  resultBox: { flex: 1, background: "#0d1117", padding: "10px" },
-  historyBox: { background: "#111", color: "white", padding: "10px" },
-  historyItem: { padding: "6px", cursor: "pointer", borderBottom: "1px solid #333" }
+
+  splitContainer: {
+    display: "flex",
+    flex: 1,
+    gap: "10px",
+    overflow: "hidden"
+  },
+
+  editor: {
+    flex: 2
+  },
+
+  resultContainer: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+    background: "#0d1117"
+  },
+
+  resultHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    padding: "8px",
+    borderBottom: "1px solid #333",
+    color: "white"
+  },
+
+  resultBox: {
+    flex: 1,
+    overflowY: "auto",
+    padding: "10px"
+  },
+
+  output: {
+    whiteSpace: "pre-wrap",
+    fontSize: "13px",
+    color: "#c9d1d9"
+  },
+
+  historyBox: {
+    background: "#111",
+    color: "white",
+    padding: "10px",
+    maxHeight: "200px",
+    overflowY: "auto"
+  },
+
+  historyItem: {
+    padding: "6px",
+    cursor: "pointer",
+    borderBottom: "1px solid #333"
+  }
 };
 
 export default App;
