@@ -42,9 +42,7 @@ function App() {
       setResult(data.result || "No AI response returned.");
 
     } catch (error) {
-
       setResult("Error connecting to AI service.");
-
     }
 
     setLoading(false);
@@ -52,7 +50,7 @@ function App() {
 
   const copyResult = () => {
     navigator.clipboard.writeText(result);
-   setResult(prev => prev + "\n\n✅ Copied!");
+    setResult(prev => prev + "\n\n✅ Copied!");
   };
 
   return (
@@ -60,31 +58,15 @@ function App() {
     <div style={styles.page}>
 
       {/* HEADER */}
-
       <header style={styles.header}>
-
-        <div style={styles.logo}>
-          AI Code Debugger
-        </div>
-
-        <div style={styles.owner}>
-          Built by <b>Shubham Prajapati</b>
-        </div>
-
+        <div style={styles.logo}>AI Code Debugger</div>
+        <div style={styles.owner}>Built by <b>Shubham Prajapati</b></div>
       </header>
 
       {/* MAIN */}
+      <div style={styles.mainLayout}>
 
-      <main style={styles.container}>
-
-        <h1 style={styles.title}>
-          AI Code Debugger
-        </h1>
-
-        <p style={styles.subtitle}>
-          Paste your code and let AI detect bugs and suggest fixes.
-        </p>
-
+        {/* CONTROLS */}
         <div style={styles.controls}>
 
           <select
@@ -92,16 +74,16 @@ function App() {
             onChange={(e) => setLanguage(e.target.value)}
             style={styles.select}
           >
-<option value="javascript">JavaScript</option>
-<option value="typescript">TypeScript</option>
-<option value="python">Python</option>
-<option value="java">Java</option>
-<option value="cpp">C++</option>
-<option value="c">C</option>
-<option value="go">Go</option>
-<option value="rust">Rust</option>
-<option value="php">PHP</option>
-<option value="ruby">Ruby</option>
+            <option value="javascript">JavaScript</option>
+            <option value="typescript">TypeScript</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+            <option value="cpp">C++</option>
+            <option value="c">C</option>
+            <option value="go">Go</option>
+            <option value="rust">Rust</option>
+            <option value="php">PHP</option>
+            <option value="ruby">Ruby</option>
           </select>
 
           <button
@@ -109,61 +91,56 @@ function App() {
             style={styles.button}
             disabled={loading}
           >
-
             {loading ? "🔄 Analyzing..." : "🚀 Analyze Code"}
-
           </button>
 
         </div>
 
-        {/* MONACO EDITOR */}
+        {/* SPLIT LAYOUT */}
+        <div style={styles.splitContainer}>
 
-        <div style={styles.editorContainer}>
+          {/* LEFT - EDITOR */}
+          <div style={styles.leftPane}>
+            <Editor
+              height="100%"
+              language={language}
+              theme="vs-dark"
+              value={code}
+              onChange={(value) => setCode(value)}
+              onMount={handleEditorMount}
+              options={{
+                fontSize: 14,
+                minimap: { enabled: false },
+                automaticLayout: true,
+                wordWrap: "on"
+              }}
+            />
+          </div>
 
-          <Editor
-            height="420px"
-            language={language}
-            theme="vs-dark"
-            value={code}
-            onChange={(value) => setCode(value)}
-            onMount={handleEditorMount}
-            options={{
-              fontSize: 14,
-              minimap: { enabled: false },
-              automaticLayout: true,
-              scrollBeyondLastLine: false,
-              wordWrap: "on"
-            }}
-          />
+          {/* RIGHT - RESULT */}
+          <div style={styles.rightPane}>
 
-        </div>
+            <div style={styles.resultHeader}>
+              <h3>AI Debug Result</h3>
 
-        {/* RESULT */}
+              {result && (
+                <button onClick={copyResult} style={styles.copyButton}>
+                  Copy
+                </button>
+              )}
+            </div>
 
-        <div style={styles.resultContainer}>
-
-          <div style={styles.resultHeader}>
-
-            <h3>AI Debug Result</h3>
-
-            {result && (
-              <button onClick={copyResult} style={styles.copyButton}>
-                Copy
-              </button>
-            )}
+            <pre style={styles.resultBox}>
+              {result || "AI response will appear here..."}
+            </pre>
 
           </div>
 
-          <pre style={{ ...styles.result, background: "#0d1117", color: "#c9d1d9" }}>
-            {result || "AI response will appear here..."}
-          </pre>
-
         </div>
 
-      </main>
+      </div>
 
       {/* FOOTER */}
-
       <footer style={styles.footer}>
         © 2026 Shubham Prajapati • AI Code Debugger Project
       </footer>
@@ -177,7 +154,7 @@ const styles = {
   page: {
     fontFamily: "Arial",
     background: "#f4f6f9",
-    minHeight: "100vh",
+    height: "100vh",
     display: "flex",
     flexDirection: "column"
   },
@@ -200,26 +177,22 @@ const styles = {
     fontSize: "14px"
   },
 
-  container: {
-    maxWidth: "950px",
-    margin: "auto",
-    padding: "40px"
-  },
-
-  title: {
-    textAlign: "center"
-  },
-
-  subtitle: {
-    textAlign: "center",
-    color: "#555",
-    marginBottom: "25px"
+  mainLayout: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+    padding: "15px"
   },
 
   controls: {
     display: "flex",
     justifyContent: "space-between",
-    marginBottom: "10px"
+    marginBottom: "10px",
+    position: "sticky",
+    top: 0,
+    background: "#f4f6f9",
+    zIndex: 10,
+    padding: "10px 0"
   },
 
   select: {
@@ -235,14 +208,27 @@ const styles = {
     cursor: "pointer"
   },
 
-  editorContainer: {
-    border: "1px solid #ddd",
-    borderRadius: "6px",
-    overflow: "hidden"
+  splitContainer: {
+    display: "flex",
+    gap: "10px",
+    flex: 1
   },
 
-  resultContainer: {
-    marginTop: "20px"
+  leftPane: {
+    flex: 1.2,
+    borderRadius: "8px",
+    overflow: "hidden",
+    border: "1px solid #ddd"
+  },
+
+  rightPane: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+    background: "#0d1117",
+    borderRadius: "8px",
+    padding: "10px",
+    color: "#c9d1d9"
   },
 
   resultHeader: {
@@ -256,18 +242,17 @@ const styles = {
     cursor: "pointer"
   },
 
-  result: {
-    background: "#f5f5f5",
-    padding: "15px",
-    borderRadius: "5px",
+  resultBox: {
+    flex: 1,
+    overflowY: "auto",
     whiteSpace: "pre-wrap",
-    fontFamily: "monospace"
+    fontFamily: "monospace",
+    marginTop: "10px"
   },
 
   footer: {
     textAlign: "center",
-    padding: "15px",
-    marginTop: "auto",
+    padding: "10px",
     background: "#111",
     color: "white",
     fontSize: "13px"
