@@ -81,6 +81,19 @@ function App() {
     setHistory([]);
   };
 
+
+
+  const copyResult = () => {
+  navigator.clipboard.writeText(result);
+};
+
+const downloadResult = () => {
+  const blob = new Blob([result], { type: "text/plain" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "ai-result.txt";
+  link.click();
+};
   return (
     <div style={styles.page}>
 
@@ -131,6 +144,18 @@ function App() {
             <div ref={resultRef}></div>
           </div>
 
+
+
+<div style={styles.resultHeader}>
+  <h3>Result</h3>
+
+  {result && (
+    <div>
+      <button onClick={copyResult}>Copy</button>
+      <button onClick={downloadResult}>Download</button>
+    </div>
+  )}
+</div>
         </div>
 
         {/* HISTORY */}
