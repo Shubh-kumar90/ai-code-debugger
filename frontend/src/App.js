@@ -1,4 +1,4 @@
-// import { useState, useRef, useEffect } from "react";
+
 import { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -6,7 +6,7 @@ import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 function App() {
 
-  // const editorRef = useRef(null);
+ 
   const resultRef = useRef(null);
 
   const [code, setCode] = useState("// Write or paste your code here");
